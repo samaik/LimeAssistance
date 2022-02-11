@@ -1,0 +1,206 @@
+﻿@page "/"
+
+<PageTitle>LimeAssistance</PageTitle>
+
+<h1>LimeAssistance</h1>
+<div class="errors">
+    <span class="text-danger">@Error</span>
+</div>
+
+<div class="row mt-4">
+    <div class="col-3">
+        <div class="row">
+            <div class="col">
+                <div class="form-group">
+                    <label for="formGroupExampleInput">Details (name;details;amount)</label>
+                    <input type="text" class="form-control" id="formGroupExampleInput" placeholder="name;details;amount"
+                        @bind="inputString" @bind:event="oninput" @onkeyup="OnInputKeyUp" />
+                </div>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col">
+                <div class="mb-2">Purchases:</div>
+
+                <ul class="list-group">
+                    @if (Purchases.Count > 0)
+                    {
+                        @foreach (var purchase in Purchases)
+                        {
+                            <PurchaseComponent purchase="@purchase" />
+                        }
+                    }
+                    else
+                    {
+                        <span>No purchases added</span>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-9">
+        <div class="mb-2">Transactions:</div>
+
+        <ul class="list-group">
+            @if (Transactions.Count > 0)
+            {
+                @foreach (var transaction in Transactions)
+                {
+                    <TransactionComponent transaction="@transaction" />
+                }
+            }
+            else
+            {
+                <span>No transactions added</span>
+            }
+        </ul>
+    </div>
+</div>
+
+
+@code {
+
+    private List<Purchase> Purchases = new();
+
+    private List<Transaction> Transactions = new();
+
+    private List<Person> People = new();
+
+    private string? Error = null;
+
+    private string? inputString { get; set; }
+
+    public Purchase parseInputString(string input)
+    {
+        var parts = input.Split(";");
+        if (parts.Length != 3)
+        {
+            throw new Exception("Expecting 'name;description;amount'");
+        }
+
+        Double amount;
+        if (!Double.TryParse(parts[2], out amount))
+        {
+            throw new Exception("Amount is not a valid decimal.");
+        }
+        else if (amount < 0)
+        {
+            throw new Exception("Expecting Amount as positive decimal.");
+        }
+
+        var payers = People.Where(p => p.Name.ToLower() == parts[0].ToLower());
+        Person payer;
+
+        if (payers.Count() == 0)
+        {
+            payer = new()
+            {
+                Name = parts[0],
+                Total = amount,
+            };
+
+            People.Add(payer);
+        }
+        else
+        {
+            payer = payers.First();
+            payer.Total += amount;
+        }
+
+
+        return new Purchase()
+        {
+            Payer = payer,
+            Description = parts[1],
+            Amount = amount,
+        };
+    }
+
+    public void calculateTransactions()
+    {
+        Transactions.Clear();
+
+        // If only one person, don't do anything
+        if (People.Count() <= 1)
+        {
+            return;
+        }
+
+        // Calculate the amount each should pay
+        var eachCost = People.Sum(p => p.Total) / People.Count();
+
+        // Set each person's diff field
+        foreach (var person in People)
+        {
+            person.Diff = person.Total - eachCost;
+            Console.WriteLine($"{person.Name} - {person.Total} - {person.Diff}");
+        }
+
+        // From the diffs, determine how much each person must pay
+        var positives = People.Where(p => p.Diff > 0);
+        var negatives = People.Where(p => p.Diff < 0);
+
+        Console.WriteLine($"{positives.Count()} - {negatives.Count()}");
+
+        foreach (var neg in negatives)
+        {
+            foreach (var pos in positives)
+            {
+                var diff = pos.Diff + neg.Diff;
+
+                if (diff > 0)
+                {
+                    Transactions.Add(new() { Payer = neg, Receiver = pos, Amount = 0 - neg.Diff });
+                    pos.Diff = diff;
+                    neg.Diff = 0;
+                    break;
+                }
+                else if (diff < 0)
+                {
+                    Transactions.Add(new() { Payer = neg, Receiver = pos, Amount = pos.Diff });
+                    neg.Diff = diff;
+                    pos.Diff = 0;
+                }
+                else
+                { // is 0
+                    Transactions.Add(new() { Payer = neg, Receiver = pos, Amount = pos.Diff });
+                    neg.Diff = 0;
+                    pos.Diff = 0;
+                    break;
+                }
+            }
+        }
+
+        Console.WriteLine(Transactions.Count());
+    }
+
+    protected async Task OnInputKeyUp(KeyboardEventArgs kargs)
+    {
+        Error = null;
+
+        if (kargs.Key != "Enter")
+        {
+            return;
+        }
+
+        if (String.IsNullOrEmpty(inputString))
+        {
+            Error = "String not valid - is empty.";
+            return;
+        }
+
+        try
+        {
+            Purchases.Add(parseInputString(inputString));
+            calculateTransactions();
+        }
+        catch (Exception exp)
+        {
+            Error = $"String not valid - {exp.Message}";
+        }
+
+        inputString = "";
+        await Task.CompletedTask;
+    }
+}
