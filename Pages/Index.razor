@@ -7,54 +7,22 @@
     <span class="text-danger">@Error</span>
 </div>
 
-<div class="row mt-4">
-    <div class="col-3">
-        <div class="row">
-            <div class="col">
-                <div class="form-group">
-                    <label for="formGroupExampleInput">Details (name;details;amount)</label>
-                    <input type="text" class="form-control" id="formGroupExampleInput" placeholder="name;details;amount"
-                        @bind="inputString" @bind:event="oninput" @onkeyup="OnInputKeyUp" />
-                </div>
-            </div>
+<div class="grid">
+    <div>
+        <div class="form-group">
+            <label for="formGroupExampleInput">Details (name;details;amount)</label>
+            <input type="text" class="form-control" id="formGroupExampleInput" placeholder="name;details;amount"
+                @bind="inputString" @bind:event="oninput" @onkeyup="OnInputKeyUp" />
         </div>
-        <div class="row mt-4">
-            <div class="col">
-                <div class="mb-2">Purchases:</div>
 
-                <ul class="list-group">
-                    @if (Purchases.Count > 0)
-                    {
-                        @foreach (var purchase in Purchases)
-                        {
-                            <PurchaseComponent purchase="@purchase" />
-                        }
-                    }
-                    else
-                    {
-                        <span>No purchases added</span>
-                    }
-                </ul>
-            </div>
+        <div>
+            <PurchasesComponent purchases="@Purchases" />
+
         </div>
     </div>
 
-    <div class="col-9">
-        <div class="mb-2">Transactions:</div>
-
-        <ul class="list-group">
-            @if (Transactions.Count > 0)
-            {
-                @foreach (var transaction in Transactions)
-                {
-                    <TransactionComponent transaction="@transaction" />
-                }
-            }
-            else
-            {
-                <span>No transactions added</span>
-            }
-        </ul>
+    <div>
+        <TransactionsComponent transactions="@Transactions" />
     </div>
 </div>
 

@@ -1,0 +1,29 @@
+<strong>Transactions:</strong>
+<br />
+
+@if (transactions.Count > 0)
+{
+    <table>
+        <tbody>
+            @foreach (var transaction in transactions)
+            {
+                <tr>
+                    <td>@transaction.Payer.Name</td>
+                    <td>pays</td>
+                    <td>@transaction.Receiver.Name</td>
+                    <td>@transaction.Amount.ToString("c")</td>
+
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <span>No transactions added</span>
+}
+
+@code {
+    [Parameter]
+    public List<Transaction> transactions { get; set; } = new();
+}

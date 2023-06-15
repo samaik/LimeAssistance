@@ -1,0 +1,28 @@
+<strong>Purchases:</strong>
+<br />
+
+@if (purchases.Count > 0)
+{
+    <table>
+        <tbody>
+            @foreach (var purchase in purchases)
+            {
+                <tr>
+                    <td>@purchase.Payer.Name</td>
+                    <td>@purchase.Description</td>
+                    <td>@purchase.Amount.ToString("c")</td>
+                </tr>
+
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <span>No purchases added</span>
+}
+
+@code {
+    [Parameter]
+    public List<Purchase> purchases { get; set; } = new();
+}
